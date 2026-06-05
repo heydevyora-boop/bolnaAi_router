@@ -12,15 +12,15 @@
   import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
   // ─── FIREBASE CONFIG ───────────────────────────────────────────────────────
-  // Replace with your Firebase project config
   const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyCCPmVHyhMpAx2FaNrdWtaq7m7xrC3IGhQ",
+    authDomain: "bolna-ai-85e30.firebaseapp.com",
+    databaseURL: "https://bolna-ai-85e30-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "bolna-ai-85e30",
+    storageBucket: "bolna-ai-85e30.firebasestorage.app",
+    messagingSenderId: "604153307813",
+    appId: "1:604153307813:web:f6cd92cd361a0e6e0de34c",
+    measurementId: "G-GN9EQ24LY9"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -746,21 +746,7 @@ function showToast(msg, type) {
   window._toastTimer = setTimeout(function() { t.className = 'toast'; }, 3500);
 }
 
-// ─── DEMO DATA (remove when Firebase is connected) ────────────────────────────
-// This shows how the dashboard looks with sample data
-// Remove this block once Firebase is configured and receiving real data
-setTimeout(function() {
-  if (Object.keys(forms).length === 0) {
-    window.renderFromFirebase({
-      "111123": { label: "GRC Pillar Ad — Jan", leads: 14, lastLead: "2h ago", tabExists: true },
-      "111124": { label: "GRC Jali Ad", leads: 6, lastLead: "5h ago", tabExists: true },
-      "111125": { label: "", leads: 3, lastLead: "1d ago", tabExists: true },
-      "111126": { label: "GRC Cornice Campaign", leads: 0, lastLead: "—", tabExists: false },
-      "111128": { label: "", leads: 1, lastLead: "10m ago", tabExists: true }
-    });
-    showToast('👀 Demo data — Firebase connect karo real data ke liye', 'warn');
-  }
-}, 2000);
+// Firebase is connected — real data loads automatically
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 updateStats();
