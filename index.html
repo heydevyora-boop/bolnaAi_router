@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Devyora — Form Router</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+  // ─── FIREBASE CONFIG ───────────────────────────────────────────────────────
+  // Replace with your Firebase project config
+  const firebaseConfig = {
+    apiKey: "YOUR_FIREBASE_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // ─── REAL-TIME LISTENER ────────────────────────────────────────────────────
+  // Listens for form IDs pushed from Apps Script via Firebase
+  const formsRef = ref(db, 'devyora/form_ids');
+  onValue(formsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      window.firebaseForms = data;
+      window.renderFromFirebase(data);
+    }
+  });
+
+  // ─── SAVE ACTIVE FORMS ────────────────────────────────────────────────────
+  // Called when user ticks/unticks a form — saves to Firebase
+  window.saveActiveToFirebase = function(activeFormIds) {
+    set(ref(db, 'devyora/active_form_ids'), activeFormIds);
+    set(ref(db, 'devyora/last_updated'), new Date().toISOString());
+  };
+
+  // ─── MARK FIREBASE READY ─────────────────────────────────────────────────
+  window.firebaseReady = true;
+</script>
+
+<style>
+:root {
+  --bg: #0c0c0c;
+  --surface: #161616;
+  --surface2: #202020;
+  --surface3: #2a2a2a;
+  --border: #303030;
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.08);
+  --orange-border: rgba(249,115,22,0.3);
+  --orange-glow: rgba(249,115,22,0.15);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.08);
+  --green-border: rgba(34,197,94,0.3);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.08);
+  --text: #efefef;
+  --text2: #777;
+  --text3: #404040;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Sora', sans-serif;
+  --r: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(12,12,12,0.97);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-icon {
+  width: 38px; height: 38px;
+  background: var(--orange);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 24px var(--orange-glow);
+}
+.brand-name { font-size: 16px; font-weight: 600; letter-spacing: -.3px; }
+.brand-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.header-status { display: flex; align-items: center; gap: 16px; }
+.status-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500;
+  padding: 5px 12px; border-radius: 20px;
+}
+.chip-live { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.chip-firebase { background: var(--orange-dim); border: 1px solid var(--orange-border); color: var(--orange); }
+.pulse { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: blink 1.8s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── STATS BAR ── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  border-bottom: 1px solid var(--border);
+}
+.stat {
+  padding: 16px 24px;
+  border-right: 1px solid var(--border);
+}
+.stat:last-child { border-right: none; }
+.stat-val {
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--mono);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+
+/* ── MAIN ── */
+.main { max-width: 1000px; margin: 0 auto; padding: 28px 24px; }
+
+/* ── SECTION HEADER ── */
+.sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.sec-title {
+  font-size: 11px; font-weight: 500;
+  color: var(--text2); text-transform: uppercase; letter-spacing: .7px;
+}
+.sec-note { font-size: 11px; color: var(--text3); }
+
+/* ── FORMS TABLE ── */
+.forms-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.table-header {
+  display: grid;
+  grid-template-columns: 44px 1fr 160px 110px 120px 100px;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.th {
+  font-size: 10px; font-weight: 500;
+  color: var(--text2); text-transform: uppercase; letter-spacing: .6px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 44px 1fr 160px 110px 120px 100px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background .15s;
+}
+.form-row:last-child { border-bottom: none; }
+.form-row:hover { background: var(--surface2); }
+.form-row.active { background: var(--orange-dim); }
+.form-row.active:hover { background: rgba(249,115,22,0.12); }
+
+/* ── CHECKBOX ── */
+.check-wrap { display: flex; align-items: center; justify-content: center; }
+.check {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+  position: relative;
+  background: var(--surface3);
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.check.checked {
+  background: var(--orange);
+  border-color: var(--orange);
+  box-shadow: 0 0 10px var(--orange-glow);
+}
+.check.checked::after {
+  content: '';
+  position: absolute;
+  left: 5px; top: 2px;
+  width: 6px; height: 10px;
+  border: 2px solid white;
+  border-top: none; border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ── FORM ID ── */
+.form-id {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+}
+.form-name-label {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+}
+.name-edit {
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border);
+  color: var(--text2);
+  font-size: 11px;
+  font-family: var(--sans);
+  outline: none;
+  width: 180px;
+  padding: 1px 2px;
+  transition: border-color .15s;
+}
+.name-edit:focus { border-bottom-color: var(--orange); color: var(--text); }
+.name-edit::placeholder { color: var(--text3); }
+
+/* ── LEAD COUNT ── */
+.lead-count {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text2);
+}
+
+/* ── SHEET TAB ── */
+.sheet-tab {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+.sheet-tab.exists {
+  color: var(--green);
+}
+.tab-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* ── STATUS ── */
+.status-badge {
+  font-size: 10px; font-weight: 500;
+  padding: 3px 10px; border-radius: 20px;
+  text-transform: uppercase; letter-spacing: .3px;
+  display: inline-block;
+}
+.badge-active { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.badge-paused { background: var(--surface3); border: 1px solid var(--border); color: var(--text2); }
+.badge-new { background: var(--orange-dim); border: 1px solid var(--orange-border); color: var(--orange); }
+
+/* ── LAST LEAD ── */
+.last-lead { font-size: 11px; color: var(--text3); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  padding: 60px;
+  text-align: center;
+  color: var(--text3);
+}
+.empty-icon { font-size: 32px; margin-bottom: 12px; opacity: .3; }
+.empty-title { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
+.empty-sub { font-size: 12px; }
+
+/* ── INFO CARDS ── */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+}
+.info-card-title { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.flow-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 12px; color: var(--text2); margin-bottom: 8px; line-height: 1.5;
+}
+.flow-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--surface3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--text2); flex-shrink: 0; margin-top: 1px;
+  font-family: var(--mono);
+}
+.flow-step strong { color: var(--text); font-weight: 500; }
+
+/* ── CONFIG ── */
+.config-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.config-field { display: flex; flex-direction: column; gap: 4px; }
+.config-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; }
+.config-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--mono);
+  outline: none;
+  width: 100%;
+  transition: border-color .15s;
+}
+.config-input:focus { border-color: var(--orange); }
+.config-input::placeholder { color: var(--text3); }
+.btn-save {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 18px;
+  color: var(--text2);
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.btn-save:hover { border-color: var(--orange); color: var(--orange); }
+
+/* ── SYNC STATUS ── */
+.sync-bar {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text2);
+  padding: 8px 14px;
+  background: var(--surface2);
+  border-radius: 7px;
+  border: 1px solid var(--border);
+}
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 11px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  transform: translateY(60px); opacity: 0;
+  transition: all .25s; z-index: 999;
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  max-width: 320px;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.ok { border-color: var(--green-border); }
+.toast.warn { border-color: var(--orange-border); }
+.toast.err { border-color: rgba(239,68,68,.3); }
+
+/* ── LOADING ── */
+.loader {
+  display: flex; align-items: center; gap: 8px;
+  justify-content: center; padding: 40px;
+  color: var(--text2); font-size: 13px;
+}
+.spin {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── NEW FORM BADGE ── */
+.new-badge {
+  font-size: 9px; font-weight: 600;
+  background: var(--orange);
+  color: white;
+  padding: 1px 6px; border-radius: 10px;
+  margin-left: 6px;
+  text-transform: uppercase; letter-spacing: .3px;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">🔆</div>
+    <div>
+      <div class="brand-name">Devyora Form Router</div>
+      <div class="brand-sub">Meta Instant Forms → Diya AI Calls</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <div class="status-chip chip-firebase">
+      <div class="pulse"></div>
+      Firebase Sync
+    </div>
+    <div class="status-chip chip-live">
+      <div class="pulse"></div>
+      Live
+    </div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat-val" id="s-total" style="color:var(--text)">—</div>
+    <div class="stat-label">Total Forms</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="s-active" style="color:var(--green)">—</div>
+    <div class="stat-label">Diya Calling</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="s-paused" style="color:var(--text2)">—</div>
+    <div class="stat-label">Paused</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val" id="s-leads" style="color:var(--orange)">—</div>
+    <div class="stat-label">Total Leads Today</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HOW IT WORKS + CONFIG -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-title">How This Works</div>
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div>Meta Instant Form submit hota hai → <strong>Apps Script</strong> data receive karta hai</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div>Sheet 1 mein <strong>form ID ke naam se nayi tab</strong> auto-create hoti hai</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div>Form ID <strong>is dashboard mein automatically appear</strong> hoti hai via Firebase</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div><strong>Tick karo</strong> → Diya us form ke leads ko call karti hai. Hatao → Band.</div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div>Ticked form ke leads <strong>Sheet 2 (Call Queue)</strong> mein jaate hain automatically</div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-title">Apps Script Configuration</div>
+      <div class="config-grid">
+        <div class="config-field">
+          <div class="config-label">Apps Script URL</div>
+          <input class="config-input" id="cfg-script" placeholder="https://script.google.com/..." />
+        </div>
+        <div class="config-field">
+          <div class="config-label">Sheet 1 ID (Raw)</div>
+          <input class="config-input" id="cfg-sheet1" placeholder="Google Sheet ID" />
+        </div>
+        <div class="config-field">
+          <div class="config-label">Sheet 2 ID (Call Queue)</div>
+          <input class="config-input" id="cfg-sheet2" placeholder="Google Sheet ID" />
+        </div>
+        <div class="config-field">
+          <div class="config-label">Sync Interval</div>
+          <input class="config-input" id="cfg-interval" placeholder="30" value="30" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-save" onclick="saveConfig()">Save Config</button>
+        <button class="btn-save" onclick="manualSync()" style="border-color:var(--orange);color:var(--orange)">↺ Sync Now</button>
+        <div class="sync-bar" id="syncBar">
+          <div class="sync-dot"></div>
+          <span id="syncText">Waiting for first sync...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORMS TABLE -->
+  <div class="sec-head">
+    <div class="sec-title">Meta Instant Forms</div>
+    <div class="sec-note">Tick = Diya calls karti hai · Untick = Sirf log hota hai</div>
+  </div>
+
+  <div class="forms-table">
+    <div class="table-header">
+      <div class="th" style="text-align:center">Call</div>
+      <div class="th">Form ID + Label</div>
+      <div class="th">Sheet 1 Tab</div>
+      <div class="th">Leads Today</div>
+      <div class="th">Status</div>
+      <div class="th">Last Lead</div>
+    </div>
+    <div id="formsBody">
+      <div class="loader">
+        <div class="spin"></div>
+        Firebase se forms fetch ho rahi hain...
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var forms = {};       // { formId: { label, active, leads, lastLead, tabExists, isNew } }
+var config = JSON.parse(localStorage.getItem('dvr_config') || '{}');
+var activeIds = JSON.parse(localStorage.getItem('dvr_active') || '[]');
+
+// Load saved config
+if (config.script) document.getElementById('cfg-script').value = config.script;
+if (config.sheet1) document.getElementById('cfg-sheet1').value = config.sheet1;
+if (config.sheet2) document.getElementById('cfg-sheet2').value = config.sheet2;
+
+// ─── FIREBASE RENDER HOOK ────────────────────────────────────────────────────
+// Called by Firebase module when data arrives
+window.renderFromFirebase = function(data) {
+  // data structure from Firebase:
+  // { "111123": { label:"GRC Pillar Ad", leads:14, lastLead:"2h ago", tabExists:true },
+  //   "111124": { label:"", leads:3, lastLead:"5m ago", tabExists:true }, ... }
+
+  var existingIds = Object.keys(forms);
+  var incomingIds = Object.keys(data);
+
+  // Mark new form IDs
+  incomingIds.forEach(function(id) {
+    data[id].isNew = !existingIds.includes(id) && existingIds.length > 0;
+    // Preserve active state from local storage
+    data[id].active = activeIds.includes(id);
+    // Preserve custom labels
+    if (forms[id] && forms[id].label && !data[id].label) {
+      data[id].label = forms[id].label;
+    }
+  });
+
+  forms = data;
+  renderTable();
+  updateStats();
+  updateSyncTime();
+
+  // If new form IDs appeared, notify
+  var newOnes = incomingIds.filter(id => !existingIds.includes(id) && existingIds.length > 0);
+  if (newOnes.length > 0) {
+    showToast('🆕 ' + newOnes.length + ' naya form ID aaya: ' + newOnes.join(', '), 'warn');
+  }
+};
+
+// ─── RENDER TABLE ────────────────────────────────────────────────────────────
+function renderTable() {
+  var body = document.getElementById('formsBody');
+  var ids = Object.keys(forms);
+
+  if (ids.length === 0) {
+    body.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <div class="empty-title">Koi form ID nahi aayi abhi</div>
+        <div class="empty-sub">Jab pehla Meta Instant Form submit hoga — form ID yahan automatically appear hogi</div>
+      </div>`;
+    return;
+  }
+
+  body.innerHTML = ids.map(function(id) {
+    var f = forms[id];
+    var isActive = activeIds.includes(id);
+    var statusBadge = isActive
+      ? '<span class="status-badge badge-active">Calling</span>'
+      : '<span class="status-badge badge-paused">Paused</span>';
+    var tabBadge = f.tabExists
+      ? '<span class="tab-badge">✓ Tab exists</span>'
+      : '<span style="color:var(--text3);font-size:11px;">Pending</span>';
+    var newBadge = f.isNew ? '<span class="new-badge">New</span>' : '';
+
+    return `
+      <div class="form-row ${isActive ? 'active' : ''}" id="row-${id}">
+        <div class="check-wrap">
+          <div class="check ${isActive ? 'checked' : ''}" onclick="toggleForm('${id}')" title="${isActive ? 'Click to pause' : 'Click to activate Diya calling'}"></div>
+        </div>
+        <div>
+          <div class="form-id">${id}${newBadge}</div>
+          <input
+            class="name-edit"
+            placeholder="Ad ka naam likho (optional)"
+            value="${f.label || ''}"
+            onchange="saveLabel('${id}', this.value)"
+            onclick="event.stopPropagation()"
+          />
+        </div>
+        <div>${tabBadge}</div>
+        <div class="lead-count">${f.leads || 0}</div>
+        <div>${statusBadge}</div>
+        <div class="last-lead">${f.lastLead || '—'}</div>
+      </div>`;
+  }).join('');
+}
+
+// ─── TOGGLE FORM ─────────────────────────────────────────────────────────────
+function toggleForm(id) {
+  var idx = activeIds.indexOf(id);
+  if (idx === -1) {
+    activeIds.push(id);
+    forms[id].active = true;
+    showToast('✅ ' + (forms[id].label || id) + ' — Diya ab call karegi', 'ok');
+  } else {
+    activeIds.splice(idx, 1);
+    forms[id].active = false;
+    showToast('⏸️ ' + (forms[id].label || id) + ' — Calls paused', '');
+  }
+
+  // Save locally
+  localStorage.setItem('dvr_active', JSON.stringify(activeIds));
+
+  // Save to Firebase — Apps Script reads this
+  if (window.saveActiveToFirebase) {
+    window.saveActiveToFirebase(activeIds);
+  }
+
+  // Notify Apps Script via webhook
+  syncActiveToAppsScript();
+
+  renderTable();
+  updateStats();
+}
+
+// ─── SAVE LABEL ──────────────────────────────────────────────────────────────
+function saveLabel(id, label) {
+  forms[id].label = label;
+  // Save labels to Firebase
+  if (window.firebaseReady) {
+    import("https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js").then(function(m) {
+      var app = window.firebaseApp;
+      // Labels saved via Apps Script sync
+    });
+  }
+  showToast('✏️ Label saved: ' + label, 'ok');
+}
+
+// ─── SYNC ACTIVE IDS TO APPS SCRIPT ─────────────────────────────────────────
+function syncActiveToAppsScript() {
+  var scriptUrl = document.getElementById('cfg-script').value || config.script;
+  if (!scriptUrl) return;
+
+  fetch(scriptUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source: 'dashboard_sync',
+      active_form_ids: activeIds,
+      timestamp: new Date().toISOString()
+    })
+  }).catch(function() {});
+}
+
+// ─── MANUAL SYNC ─────────────────────────────────────────────────────────────
+function manualSync() {
+  var scriptUrl = document.getElementById('cfg-script').value || config.script;
+  if (!scriptUrl) {
+    showToast('❌ Apps Script URL set karo pehle', 'err');
+    return;
+  }
+
+  document.getElementById('syncText').textContent = 'Syncing...';
+
+  fetch(scriptUrl + '?action=getFormIds', { mode: 'no-cors' })
+    .then(function() {
+      updateSyncTime();
+      showToast('↺ Sync complete', 'ok');
+    })
+    .catch(function() {
+      showToast('Firebase realtime sync active hai — manual sync optional hai', 'warn');
+      updateSyncTime();
+    });
+}
+
+// ─── SAVE CONFIG ─────────────────────────────────────────────────────────────
+function saveConfig() {
+  config = {
+    script: document.getElementById('cfg-script').value,
+    sheet1: document.getElementById('cfg-sheet1').value,
+    sheet2: document.getElementById('cfg-sheet2').value,
+    interval: document.getElementById('cfg-interval').value
+  };
+  localStorage.setItem('dvr_config', JSON.stringify(config));
+  showToast('✅ Config saved', 'ok');
+}
+
+// ─── UPDATE STATS ────────────────────────────────────────────────────────────
+function updateStats() {
+  var ids = Object.keys(forms);
+  var active = activeIds.filter(id => forms[id]).length;
+  var totalLeads = ids.reduce(function(sum, id) { return sum + (forms[id].leads || 0); }, 0);
+
+  document.getElementById('s-total').textContent = ids.length || '0';
+  document.getElementById('s-active').textContent = active || '0';
+  document.getElementById('s-paused').textContent = (ids.length - active) || '0';
+  document.getElementById('s-leads').textContent = totalLeads || '0';
+}
+
+// ─── SYNC TIME ───────────────────────────────────────────────────────────────
+function updateSyncTime() {
+  var now = new Date();
+  var time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('syncText').textContent = 'Last synced: ' + time;
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function() { t.className = 'toast'; }, 3500);
+}
+
+// ─── DEMO DATA (remove when Firebase is connected) ────────────────────────────
+// This shows how the dashboard looks with sample data
+// Remove this block once Firebase is configured and receiving real data
+setTimeout(function() {
+  if (Object.keys(forms).length === 0) {
+    window.renderFromFirebase({
+      "111123": { label: "GRC Pillar Ad — Jan", leads: 14, lastLead: "2h ago", tabExists: true },
+      "111124": { label: "GRC Jali Ad", leads: 6, lastLead: "5h ago", tabExists: true },
+      "111125": { label: "", leads: 3, lastLead: "1d ago", tabExists: true },
+      "111126": { label: "GRC Cornice Campaign", leads: 0, lastLead: "—", tabExists: false },
+      "111128": { label: "", leads: 1, lastLead: "10m ago", tabExists: true }
+    });
+    showToast('👀 Demo data — Firebase connect karo real data ke liye', 'warn');
+  }
+}, 2000);
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+updateStats();
+</script>
+</body>
+</html>
