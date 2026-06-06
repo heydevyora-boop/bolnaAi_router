@@ -162,7 +162,7 @@ body {
 }
 .table-header {
   display: grid;
-  grid-template-columns: 44px 1fr 160px 110px 120px 100px;
+  grid-template-columns: 44px 1fr 160px 110px 120px 100px 150px;
   padding: 10px 16px;
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
@@ -173,12 +173,27 @@ body {
 }
 .form-row {
   display: grid;
-  grid-template-columns: 44px 1fr 160px 110px 120px 100px;
+  grid-template-columns: 44px 1fr 160px 110px 120px 100px 150px;
   padding: 13px 16px;
   border-bottom: 1px solid var(--border);
   align-items: center;
   transition: background .15s;
 }
+.btn-call-all {
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: var(--text2);
+  font-size: 11px; font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+  white-space: nowrap;
+}
+.btn-call-all:hover { border-color: var(--green); color: var(--green); }
+.btn-call-all.calling { border-color: var(--orange); color: var(--orange); }
+.btn-call-all:disabled { opacity: .4; cursor: not-allowed; }
 .form-row:last-child { border-bottom: none; }
 .form-row:hover { background: var(--surface2); }
 .form-row.active { background: var(--orange-dim); }
@@ -514,12 +529,13 @@ body {
 
   <div class="forms-table">
     <div class="table-header">
-      <div class="th" style="text-align:center">Call</div>
+      <div class="th" style="text-align:center">New Leads</div>
       <div class="th">Form ID + Label</div>
       <div class="th">Sheet 1 Tab</div>
       <div class="th">Leads Today</div>
       <div class="th">Status</div>
       <div class="th">Last Lead</div>
+      <div class="th">Call Existing</div>
     </div>
     <div id="formsBody">
       <div class="loader">
@@ -623,6 +639,11 @@ function renderTable() {
         <div class="lead-count">${f.leads || 0}</div>
         <div>${statusBadge}</div>
         <div class="last-lead">${f.lastLead || '—'}</div>
+        <div>
+          <button class="btn-call-all" id="callbtn-${id}" onclick="callAllExisting('${id}')" title="Call all Pending leads in this form tab">
+            📞 Call Pending
+          </button>
+        </div>
       </div>`;
   }).join('');
 }
@@ -747,6 +768,51 @@ function showToast(msg, type) {
 }
 
 // Firebase is connected — real data loads automatically
+
+// ─── CALL ALL EXISTING PENDING LEADS ─────────────────────────────────────────
+function callAllExisting(formId) {
+  var scriptUrl = document.getElementById('cfg-script').value || config.script;
+  if (!scriptUrl) {
+    showToast('❌ Apps Script URL set karo pehle config mein', 'err');
+    return;
+  }
+
+  var btn = document.getElementById('callbtn-' + formId);
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Calling...';
+    btn.classList.add('calling');
+  }
+
+  fetch(scriptUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      source: 'call_all_existing',
+      form_id: formId,
+      timestamp: new Date().toISOString()
+    })
+  }).then(function() {
+    showToast('📞 Diya is calling all Pending leads in form ' + (forms[formId] && forms[formId].label ? forms[formId].label : formId), 'ok');
+    if (btn) {
+      setTimeout(function() {
+        btn.disabled = false;
+        btn.textContent = '📞 Call Pending';
+        btn.classList.remove('calling');
+      }, 5000);
+    }
+  }).catch(function() {
+    showToast('📞 Request sent — check Call Queue in Google Sheet', 'ok');
+    if (btn) {
+      setTimeout(function() {
+        btn.disabled = false;
+        btn.textContent = '📞 Call Pending';
+        btn.classList.remove('calling');
+      }, 5000);
+    }
+  });
+}
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 updateStats();
