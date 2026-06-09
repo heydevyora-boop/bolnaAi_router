@@ -654,7 +654,9 @@ function toggleForm(id) {
   if (idx === -1) {
     activeIds.push(id);
     forms[id].active = true;
-    showToast('✅ ' + (forms[id].label || id) + ' — Diya ab call karegi', 'ok');
+    showToast('✅ ' + (forms[id].label || id) + ' — Diya ab call karegi (existing + new leads)', 'ok');
+    // Auto call all existing pending leads when toggled ON
+    setTimeout(function() { callAllExisting(id); }, 1000);
   } else {
     activeIds.splice(idx, 1);
     forms[id].active = false;
