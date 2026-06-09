@@ -695,17 +695,9 @@ function saveLabel(id, label) {
 function syncActiveToAppsScript() {
   var scriptUrl = document.getElementById('cfg-script').value || config.script;
   if (!scriptUrl) return;
-
-  fetch(scriptUrl, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      source: 'dashboard_sync',
-      active_form_ids: activeIds,
-      timestamp: new Date().toISOString()
-    })
-  }).catch(function() {});
+  // Use GET with URL params — no-cors POST drops the body
+  var url = scriptUrl + '?source=dashboard_sync&active_form_ids=' + encodeURIComponent(JSON.stringify(activeIds));
+  fetch(url, { mode: 'no-cors' }).catch(function() {});
 }
 
 // ─── MANUAL SYNC ─────────────────────────────────────────────────────────────
@@ -786,10 +778,11 @@ function callAllExisting(formId) {
     btn.classList.add('calling');
   }
 
-  fetch(scriptUrl, {
-    method: 'POST',
+  // Use GET with URL params — no-cors POST drops the body
+  var callUrl = scriptUrl + '?source=call_all_existing&form_id=' + encodeURIComponent(formId);
+  fetch(callUrl, {
+    method: 'GET',
     mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       source: 'call_all_existing',
       form_id: formId,
