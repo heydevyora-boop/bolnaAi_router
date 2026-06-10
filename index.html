@@ -38,14 +38,27 @@
   });
 
   // ─── SAVE ACTIVE FORMS ────────────────────────────────────────────────────
-  // Called when user ticks/unticks a form — saves to Firebase
   window.saveActiveToFirebase = function(activeFormIds) {
     set(ref(db, 'devyora/active_form_ids'), activeFormIds);
     set(ref(db, 'devyora/last_updated'), new Date().toISOString());
   };
 
+  // ─── SAVE CONFIG TO FIREBASE ─────────────────────────────────────────────
+  // So all devices (Apoorva's phone, etc.) get the Apps Script URL automatically
+  window.saveConfigToFirebase = function(cfg) {
+    set(ref(db, 'devyora/config'), cfg);
+  };
+
+  // ─── LISTEN TO CONFIG FROM FIREBASE ──────────────────────────────────────
+  const configRef = ref(db, 'devyora/config');
+  onValue(configRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      if (window.applyFirebaseConfig) window.applyFirebaseConfig(data);
+    }
+  });
+
   // ─── LISTEN TO ACTIVE FORM IDS ───────────────────────────────────────────
-  // Syncs toggle state across all devices in real time
   const activeIdsRef = ref(db, 'devyora/active_form_ids');
   onValue(activeIdsRef, (snapshot) => {
     const data = snapshot.val();
@@ -740,8 +753,22 @@ function saveConfig() {
     interval: document.getElementById('cfg-interval').value
   };
   localStorage.setItem('dvr_config', JSON.stringify(config));
-  showToast('✅ Config saved', 'ok');
+  // Also save to Firebase so all devices get the Apps Script URL automatically
+  if (window.saveConfigToFirebase) window.saveConfigToFirebase(config);
+  showToast('✅ Config saved — synced to all devices', 'ok');
 }
+
+// ─── APPLY CONFIG FROM FIREBASE ──────────────────────────────────────────────
+// Called when Firebase loads config — fills in URL for Apoorva's device automatically
+window.applyFirebaseConfig = function(cfg) {
+  if (!config.script && cfg.script) {
+    config = cfg;
+    localStorage.setItem('dvr_config', JSON.stringify(config));
+    if (cfg.script) document.getElementById('cfg-script').value = cfg.script;
+    if (cfg.sheet1) document.getElementById('cfg-sheet1').value = cfg.sheet1;
+    if (cfg.sheet2) document.getElementById('cfg-sheet2').value = cfg.sheet2;
+  }
+};
 
 // ─── UPDATE STATS ────────────────────────────────────────────────────────────
 function updateStats() {
