@@ -44,6 +44,16 @@
     set(ref(db, 'devyora/last_updated'), new Date().toISOString());
   };
 
+  // ─── LISTEN TO ACTIVE FORM IDS ───────────────────────────────────────────
+  // Syncs toggle state across all devices in real time
+  const activeIdsRef = ref(db, 'devyora/active_form_ids');
+  onValue(activeIdsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data && Array.isArray(data)) {
+      if (window.updateActiveIds) window.updateActiveIds(data);
+    }
+  });
+
   // ─── MARK FIREBASE READY ─────────────────────────────────────────────────
   window.firebaseReady = true;
 </script>
@@ -760,6 +770,15 @@ function showToast(msg, type) {
   clearTimeout(window._toastTimer);
   window._toastTimer = setTimeout(function() { t.className = 'toast'; }, 3500);
 }
+
+// ─── SYNC ACTIVE IDS FROM FIREBASE ──────────────────────────────────────────
+// Called by Firebase listener — syncs toggle state across all devices
+window.updateActiveIds = function(ids) {
+  activeIds = ids;
+  localStorage.setItem('dvr_active', JSON.stringify(activeIds));
+  renderTable();
+  updateStats();
+};
 
 // Firebase is connected — real data loads automatically
 
