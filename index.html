@@ -67,52 +67,55 @@
     }
   });
 
-  // ─── LEADS — Real-time per form (for selection + calling) ────────────────
-  window.subscribeLeads = function(formId, callback) {
-    const leadsRef = ref(db, 'devyora/leads/' + formId);
-    return onValue(leadsRef, (snapshot) => {
-      callback(snapshot.val() || {});
-    });
-  };
-
-  // ─── CALL LOGS — Real-time per form ──────────────────────────────────────
+  // ─── SUBSCRIBE TO CALL LOGS (real-time) ─────────────────────────────────
   window.subscribeCallLogs = function(formId, callback) {
     const logsRef = ref(db, 'devyora/call_logs/' + formId);
-    return onValue(logsRef, (snapshot) => {
+    const unsub = onValue(logsRef, (snapshot) => {
       callback(snapshot.val() || {});
     });
+    return unsub; // caller can call unsub() to detach
   };
 
-  // ─── FORM SETTINGS — Call limit ───────────────────────────────────────────
+  // ─── SUBSCRIBE TO LEADS (real-time) ──────────────────────────────────────
+  window.subscribeLeads = function(formId, callback) {
+    const leadsRef = ref(db, 'devyora/leads/' + formId);
+    const unsub = onValue(leadsRef, (snapshot) => {
+      callback(snapshot.val() || {});
+    });
+    return unsub;
+  };
+
+  // ─── FORM SETTINGS HELPERS ────────────────────────────────────────────────
   window.getCallLimit = function(formId, cb) {
-    get(ref(db, 'devyora/form_settings/' + formId + '/callLimit')).then(s => cb(s.val()));
+    get(ref(db, 'devyora/form_settings/' + formId + '/callLimit'))
+      .then(s => cb(s.val())).catch(() => cb(null));
   };
   window.saveCallLimit = function(formId, val) {
     set(ref(db, 'devyora/form_settings/' + formId + '/callLimit'), val);
   };
 
-  // ─── FORM SETTINGS — Per-form webhook ────────────────────────────────────
   window.getFormWebhook = function(formId, cb) {
-    get(ref(db, 'devyora/form_settings/' + formId + '/webhook')).then(s => cb(s.val()));
+    get(ref(db, 'devyora/form_settings/' + formId + '/webhook'))
+      .then(s => cb(s.val())).catch(() => cb(null));
   };
   window.saveFormWebhook = function(formId, val) {
-    set(ref(db, 'devyora/form_settings/' + formId + '/webhook'), val);
+    set(ref(db, 'devyora/form_settings/' + formId + '/webhook'), val || null);
   };
 
-  // ─── FORM SETTINGS — Pause state ─────────────────────────────────────────
   window.getFormPaused = function(formId, cb) {
-    get(ref(db, 'devyora/form_settings/' + formId + '/paused')).then(s => cb(s.val()));
+    get(ref(db, 'devyora/form_settings/' + formId + '/paused'))
+      .then(s => cb(!!s.val())).catch(() => cb(false));
   };
-  window.setFormPaused = function(formId, val) {
-    set(ref(db, 'devyora/form_settings/' + formId + '/paused'), val);
+  window.setFormPaused = function(formId, bool) {
+    set(ref(db, 'devyora/form_settings/' + formId + '/paused'), bool);
   };
 
-  // ─── FORM SETTINGS — Custom webhooks ─────────────────────────────────────
   window.getCustomWebhooks = function(formId, cb) {
-    get(ref(db, 'devyora/form_settings/' + formId + '/customWebhooks')).then(s => cb(s.val() || []));
+    get(ref(db, 'devyora/form_settings/' + formId + '/customWebhooks'))
+      .then(s => cb(s.val() || [])).catch(() => cb([]));
   };
-  window.saveCustomWebhooksFirebase = function(formId, webhooks) {
-    set(ref(db, 'devyora/form_settings/' + formId + '/customWebhooks'), webhooks);
+  window.saveCustomWebhooksFirebase = function(formId, arr) {
+    set(ref(db, 'devyora/form_settings/' + formId + '/customWebhooks'), arr || []);
   };
 
   // ─── MARK FIREBASE READY ─────────────────────────────────────────────────
@@ -1359,13 +1362,12 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
   if (brandSub) brandSub.textContent = 'Form Detail · ' + formId;
 
   // ── STATE ────────────────────────────────────────────────────────────────
-  var callLogs = {};
-  var allLeads = {};        // { phoneClean: { name, phone, city, callStatus, timestamp } }
-  var selectedPhones = {};  // { phoneClean: true/false }
-  var callLimit = 0;
+  var callLogs = {};     // { callId: { phone, name, status, duration, recordingUrl, transcript, timestamp, waStatus } }
+  var leadsData = {};    // { phoneKey: { name, phone, status, ... } } from Firebase devyora/leads/{formId}
+  var callLimit = 0;     // 0 = no limit
   var isPaused = false;
   var formWebhook = '';
-  var formMeta = {};
+  var formMeta = {};     // label, leads etc from Firebase forms data
   var callUnsubscribe = null;
   var leadsUnsubscribe = null;
 
@@ -1417,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
     // Subscribe to leads real-time
     if (window.subscribeLeads) {
       leadsUnsubscribe = window.subscribeLeads(formId, function(data) {
-        allLeads = data;
+        leadsData = data;
         renderLeadsTable();
       });
     }
@@ -1457,25 +1459,23 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
 
     // Action buttons
     html += '<div class="detail-actions">'
-      + '<button class="action-btn primary" onclick="startCalling()">📞 Call All Pending</button>'
+      + '<button class="action-btn primary" onclick="startCalling()">📞 Start Calling Pending</button>'
       + '<button class="action-btn" onclick="pauseAt()">⏸️ Pause After Current</button>'
       + '<button class="action-btn danger" onclick="clearPause()">✕ Clear Pause</button>'
       + '</div>';
 
-    // ── LEADS SELECTION TABLE ──────────────────────────────────────────────
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:4px;">'
-      + '<div class="sec-title">Select Leads to Call</div>'
-      + '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-      + '<button class="action-btn" onclick="selectAllLeads()" style="padding:5px 12px;font-size:11px;">✓ Select All</button>'
-      + '<button class="action-btn" onclick="deselectAllLeads()" style="padding:5px 12px;font-size:11px;">✕ Deselect</button>'
-      + '<button class="action-btn" onclick="syncLeadsFromSheet()" style="padding:5px 12px;font-size:11px;border-color:var(--orange);color:var(--orange);">↺ Sync from Sheet</button>'
-      + '<button class="action-btn primary" id="callSelectedBtn" onclick="callSelectedLeads()" style="padding:5px 14px;font-size:11px;">📞 Call Selected (0)</button>'
+// ── SELECT LEADS SECTION ─────────────────────────────────────────────────
+    html += '<div class="webhook-card" style="margin-top:16px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+      + '<div class="webhook-title">📋 Select Specific Leads to Call</div>'
+      + '<div style="display:flex;gap:8px;">'
+      + '<button class="limit-btn" onclick="syncLeadsFromSheet()" id="syncLeadsBtn">↻ Sync from Sheet</button>'
+      + '<button class="action-btn primary" onclick="callSelectedLeads()" id="callSelectedBtn" style="padding:5px 14px;font-size:12px;">📞 Call Selected</button>'
       + '</div>'
       + '</div>'
-      + '<div id="leadsSelectionTable" style="margin-bottom:20px;">'
-      + '<div style="padding:20px;color:var(--text3);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);text-align:center;">'
-      + 'Click ↺ Sync from Sheet to load leads, or wait for Firebase to populate automatically.'
-      + '</div></div>';
+      + '<div style="font-size:11px;color:var(--text3);margin-bottom:10px;">Select leads below and click "Call Selected" to call only those leads. Leave all unchecked to call all pending.</div>'
+      + '<div id="leadsSelectTable"><div style="color:var(--text2);font-size:12px;padding:12px 0;">Loading leads... (sync from sheet first if empty)</div></div>'
+      + '</div>';
 
 // Per-form webhook card
     html += '<div class="webhook-card">'
@@ -1524,105 +1524,6 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
     renderCallsTable();
     renderDetailStats();
   }
-
-  // ── LEADS SELECTION ──────────────────────────────────────────────────────
-  function renderLeadsTable() {
-    var area = document.getElementById('leadsSelectionTable');
-    if (!area) return;
-    var entries = Object.entries(allLeads);
-    if (entries.length === 0) {
-      area.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);text-align:center;">No leads in Firebase yet — click ↺ Sync from Sheet to load them.</div>';
-      return;
-    }
-    var html = '<div class="calls-table"><div style="display:grid;grid-template-columns:32px 1fr 130px 160px 110px;padding:9px 14px;background:var(--surface2);border-bottom:1px solid var(--border);">'
-      + '<div class="th"><input type="checkbox" id="selectAllChk" onchange="toggleSelectAllLeads(this)" /></div>'
-      + '<div class="th">Lead (Phone + Name)</div>'
-      + '<div class="th">City</div>'
-      + '<div class="th">Call Status</div>'
-      + '<div class="th">Added</div>'
-      + '</div>';
-
-    entries.sort(function(a,b){ return (b[1].timestamp||0)-(a[1].timestamp||0); });
-
-    entries.forEach(function(entry) {
-      var phoneKey = entry[0];
-      var lead = entry[1];
-      var checked = !!selectedPhones[phoneKey];
-      var cs = String(lead.callStatus || 'Pending');
-      var csLow = cs.toLowerCase();
-      var statusColor = csLow.startsWith('completed') ? 'var(--green)'
-        : (csLow.startsWith('busy') || csLow.startsWith('failed') || csLow.startsWith('no answer')) ? 'var(--red)'
-        : (csLow.startsWith('queued') || csLow.startsWith('calling')) ? 'var(--orange)'
-        : 'var(--text2)';
-      var time = lead.timestamp ? new Date(lead.timestamp).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
-      html += '<div style="display:grid;grid-template-columns:32px 1fr 130px 160px 110px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;" class="call-row">'
-        + '<div><input type="checkbox" data-key="' + phoneKey + '" ' + (checked?'checked':'') + ' onchange="toggleLeadSelect(this)" /></div>'
-        + '<div><div class="call-phone" style="font-size:12px;">' + (lead.phone || phoneKey) + '</div><div class="call-name">' + (lead.name || '') + '</div></div>'
-        + '<div style="font-size:11px;color:var(--text2);">' + (lead.city || '—') + '</div>'
-        + '<div style="font-size:11px;color:' + statusColor + ';">' + cs.split(' —')[0] + '</div>'
-        + '<div style="font-size:11px;color:var(--text3);">' + time + '</div>'
-        + '</div>';
-    });
-    html += '</div>';
-    area.innerHTML = html;
-    updateCallSelectedBtn();
-  }
-
-  function toggleLeadSelect(el) {
-    var key = el.getAttribute('data-key');
-    selectedPhones[key] = el.checked;
-    updateCallSelectedBtn();
-  }
-
-  function toggleSelectAllLeads(el) {
-    Object.keys(allLeads).forEach(function(k){ selectedPhones[k] = el.checked; });
-    renderLeadsTable();
-  }
-
-  window.selectAllLeads = function() {
-    Object.keys(allLeads).forEach(function(k){ selectedPhones[k] = true; });
-    renderLeadsTable();
-  };
-
-  window.deselectAllLeads = function() {
-    selectedPhones = {};
-    renderLeadsTable();
-  };
-
-  function updateCallSelectedBtn() {
-    var count = Object.keys(selectedPhones).filter(function(k){ return selectedPhones[k]; }).length;
-    var btn = document.getElementById('callSelectedBtn');
-    if (btn) btn.textContent = '📞 Call Selected (' + count + ')';
-  }
-
-  window.callSelectedLeads = function() {
-    var phones = Object.keys(selectedPhones).filter(function(k){ return selectedPhones[k]; });
-    if (phones.length === 0) { showToast('❌ Koi lead select nahi ki', 'err'); return; }
-    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
-    var url = formWebhook || dvConfig.script || '';
-    if (!url) { showToast('❌ Apps Script URL set karo config mein', 'err'); return; }
-    var callUrl = url + '?source=call_selected&form_id=' + encodeURIComponent(formId)
-      + '&phones=' + encodeURIComponent(JSON.stringify(phones));
-    var img = new Image();
-    img.src = callUrl;
-    img.onload = img.onerror = function() {
-      showToast('📞 Diya is calling ' + phones.length + ' selected leads...', 'ok');
-      selectedPhones = {};
-      renderLeadsTable();
-    };
-  };
-
-  window.syncLeadsFromSheet = function() {
-    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
-    var url = formWebhook || dvConfig.script || '';
-    if (!url) { showToast('❌ Apps Script URL set karo pehle', 'err'); return; }
-    var syncUrl = url + '?source=sync_leads&form_id=' + encodeURIComponent(formId);
-    var img = new Image();
-    img.src = syncUrl;
-    img.onload = img.onerror = function() {
-      showToast('↺ Syncing leads from Sheet to Firebase...', 'warn');
-    };
-  };
 
   // ── RENDER STATS HTML ─────────────────────────────────────────────────────
   function renderStatsHTML() {
@@ -1697,17 +1598,110 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
     body.innerHTML = rows;
   }
 
-  function getStatusBadge(status) {
-    var map = {
-      'calling': '<span class="cs cs-calling">📞 Calling</span>',
-      'completed': '<span class="cs cs-done">✓ Completed</span>',
-      'missed': '<span class="cs cs-missed">✗ Not Picked</span>',
-      'no_answer': '<span class="cs cs-missed">✗ No Answer</span>',
-      'failed': '<span class="cs cs-missed">✗ Failed</span>',
-      'pending': '<span class="cs cs-pending">Pending</span>',
-      'paused': '<span class="cs cs-paused">⏸ Paused</span>'
+  // ── LEADS TABLE ───────────────────────────────────────────────────────────
+  function renderLeadsTable() {
+    var el = document.getElementById('leadsSelectTable');
+    if (!el) return;
+    var keys = Object.keys(leadsData || {});
+    if (!keys.length) {
+      el.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:12px 0;">No leads synced yet — click ↻ Sync from Sheet to pull.</div>';
+      return;
+    }
+    var html = '<div style="display:flex;gap:8px;margin-bottom:8px;">'
+      + '<button class="limit-btn" onclick="selectAllLeads(true)">Select All</button>'
+      + '<button class="limit-btn" onclick="selectAllLeads(false)">Deselect All</button>'
+      + '<span style="font-size:11px;color:var(--text2);align-self:center;" id="leadSelCount">' + keys.length + ' leads</span>'
+      + '</div>';
+    html += '<div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;">'
+      + '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+      + '<thead><tr style="background:var(--surface2);position:sticky;top:0;">'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;width:36px;"></th>'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;">Name</th>'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;">Phone</th>'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;">Status</th>'
+      + '<th style="padding:8px 10px;text-align:left;color:var(--text2);font-weight:500;">Recording</th>'
+      + '</tr></thead><tbody>';
+    keys.forEach(function(k) {
+      var l = leadsData[k];
+      var phone = l.phone || k.replace(/_/g, '').replace(/\D/g,'');
+      var recCell = l.recordingUrl
+        ? '<a href="' + escapeHtml(l.recordingUrl) + '" target="_blank" style="color:var(--orange);font-size:11px;text-decoration:none;">▶ Play</a>'
+        : '<span style="color:var(--text3);font-size:11px;">—</span>';
+      html += '<tr style="border-top:1px solid var(--border);">'
+        + '<td style="padding:7px 10px;"><input type="checkbox" class="lead-cb" data-phone="' + escapeHtml(phone) + '" style="accent-color:var(--orange);width:14px;height:14px;" onchange="updateLeadSelCount()" /></td>'
+        + '<td style="padding:7px 10px;color:var(--text);">' + escapeHtml(l.name || '—') + '</td>'
+        + '<td style="padding:7px 10px;font-family:var(--mono);color:var(--text2);">' + escapeHtml(phone) + '</td>'
+        + '<td style="padding:7px 10px;">' + getStatusBadge(l.callStatus || l.status || 'pending') + '</td>'
+        + '<td style="padding:7px 10px;">' + recCell + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div>';
+    el.innerHTML = html;
+  }
+
+  window.updateLeadSelCount = function() {
+    var checked = document.querySelectorAll('.lead-cb:checked').length;
+    var total = document.querySelectorAll('.lead-cb').length;
+    var el = document.getElementById('leadSelCount');
+    if (el) el.textContent = checked + ' / ' + total + ' selected';
+  };
+
+  window.selectAllLeads = function(sel) {
+    document.querySelectorAll('.lead-cb').forEach(function(cb) { cb.checked = sel; });
+    window.updateLeadSelCount();
+  };
+
+  function callSelectedLeads() {
+    var checked = document.querySelectorAll('.lead-cb:checked');
+    var phones = [];
+    checked.forEach(function(cb) { phones.push(cb.getAttribute('data-phone')); });
+    if (!phones.length) {
+      showToast('Select at least one lead first', 'err');
+      return;
+    }
+    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
+    var scriptUrl = dvConfig.script || '';
+    if (!scriptUrl) { showToast('Apps Script URL not set in Config', 'err'); return; }
+    var btn = document.getElementById('callSelectedBtn');
+    if (btn) { btn.textContent = '⏳ Calling...'; btn.disabled = true; }
+    var url = scriptUrl + '?source=call_selected&form_id=' + encodeURIComponent(formId) + '&phones=' + encodeURIComponent(JSON.stringify(phones));
+    var img = new Image();
+    img.src = url;
+    img.onload = img.onerror = function() {
+      if (btn) { btn.textContent = '📞 Call Selected'; btn.disabled = false; }
+      showToast('Call request sent for ' + phones.length + ' lead(s)', 'ok');
     };
-    return map[status] || '<span class="cs cs-pending">' + (status || 'Pending') + '</span>';
+  }
+
+  function syncLeadsFromSheet() {
+    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
+    var scriptUrl = dvConfig.script || '';
+    if (!scriptUrl) { showToast('Apps Script URL not set in Config', 'err'); return; }
+    var btn = document.getElementById('syncLeadsBtn');
+    if (btn) { btn.textContent = '⏳ Syncing...'; btn.disabled = true; }
+    var url = scriptUrl + '?source=sync_leads&form_id=' + encodeURIComponent(formId);
+    var img = new Image();
+    img.src = url;
+    img.onload = img.onerror = function() {
+      if (btn) { btn.textContent = '↻ Sync from Sheet'; btn.disabled = false; }
+      showToast('Sync triggered — leads will appear shortly', 'ok');
+    };
+  }
+
+  function getStatusBadge(status) {
+    var s = String(status || 'pending').toLowerCase().replace(/-/g,'_').replace(/\s+/g,'_');
+    // Normalise Bolna status strings like "Busy — 10/6/2026..." → just take first word
+    if (s.indexOf('_—') !== -1 || s.indexOf('___') !== -1) s = s.split('_')[0];
+    if (s === 'completed')                        return '<span class="cs cs-done">✓ Completed</span>';
+    if (s === 'calling' || s === 'in_progress')   return '<span class="cs cs-calling">📞 Calling</span>';
+    if (s === 'busy')                             return '<span class="cs cs-missed">📵 Busy</span>';
+    if (s === 'no_answer' || s === 'missed')      return '<span class="cs cs-missed">✗ No Answer</span>';
+    if (s === 'failed')                           return '<span class="cs cs-missed">✗ Failed</span>';
+    if (s === 'call_disconnected')                return '<span class="cs cs-missed">✗ Disconnected</span>';
+    if (s === 'pending')                          return '<span class="cs cs-pending">Pending</span>';
+    if (s === 'paused')                           return '<span class="cs cs-paused">⏸ Paused</span>';
+    if (s === 'queued')                           return '<span class="cs cs-calling">⏳ Queued</span>';
+    return '<span class="cs cs-pending">' + (status || 'Pending') + '</span>';
   }
 
   function renderRecording(cid, c) {
@@ -1841,9 +1835,17 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
   var customWebhooks = [];
 
   window.loadCustomWebhooks = function() {
-    var stored = localStorage.getItem('dvr_custom_wh_' + formId);
-    customWebhooks = stored ? JSON.parse(stored) : [];
-    renderCustomWebhooks();
+    if (window.getCustomWebhooks) {
+      window.getCustomWebhooks(formId, function(arr) {
+        customWebhooks = Array.isArray(arr) && arr.length ? arr
+          : JSON.parse(localStorage.getItem('dvr_custom_wh_' + formId) || '[]');
+        renderCustomWebhooks();
+      });
+    } else {
+      var stored = localStorage.getItem('dvr_custom_wh_' + formId);
+      customWebhooks = stored ? JSON.parse(stored) : [];
+      renderCustomWebhooks();
+    }
   };
 
   function renderCustomWebhooks() {
@@ -1891,22 +1893,10 @@ document.addEventListener('DOMContentLoaded', function() { (function() {
 
   function saveCustomWebhooks() {
     localStorage.setItem('dvr_custom_wh_' + formId, JSON.stringify(customWebhooks));
-    if (window.saveCustomWebhooksFirebase) window.saveCustomWebhooksFirebase(formId, customWebhooks);
-  }
-
-  // Load custom webhooks from Firebase (cross-device)
-  window.loadCustomWebhooks = function() {
-    if (window.getCustomWebhooks) {
-      window.getCustomWebhooks(formId, function(data) {
-        customWebhooks = data || [];
-        renderCustomWebhooks();
-      });
-    } else {
-      var stored = localStorage.getItem('dvr_custom_wh_' + formId);
-      customWebhooks = stored ? JSON.parse(stored) : [];
-      renderCustomWebhooks();
+    if (window.saveCustomWebhooksFirebase) {
+      window.saveCustomWebhooksFirebase(formId, customWebhooks);
     }
-  };
+  }
 
   // Load custom webhooks when detail page renders
   setTimeout(function() {
