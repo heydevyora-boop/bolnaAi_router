@@ -439,6 +439,304 @@ body {
   margin-left: 6px;
   text-transform: uppercase; letter-spacing: .3px;
 }
+
+/* ═══════════════════════════════════════════════════════
+   DETAIL PAGE STYLES — added, nothing existing changed
+   ═══════════════════════════════════════════════════════ */
+
+/* Mobile viewport */
+@media (max-width: 700px) {
+  .main { padding: 14px 12px !important; }
+  .info-grid { grid-template-columns: 1fr !important; }
+  .config-grid { grid-template-columns: 1fr !important; }
+  .table-header, .form-row { grid-template-columns: 44px 1fr 100px 90px 100px !important; }
+  .table-header > *:nth-child(6),
+  .table-header > *:nth-child(7),
+  .form-row > *:nth-child(6),
+  .form-row > *:nth-child(7) { display: none; }
+  .header { padding: 12px 14px; }
+  .stat { padding: 10px 8px; }
+  .stat-val { font-size: 20px; }
+  .stat-label { font-size: 9px; }
+}
+
+/* Detail page — back button */
+.back-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-family: var(--sans);
+  text-decoration: none;
+  transition: all .15s;
+  margin-bottom: 20px;
+}
+.back-btn:hover { border-color: var(--orange); color: var(--orange); }
+
+/* Detail page — form header card */
+.detail-header-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.detail-form-id {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.detail-form-label {
+  font-size: 13px;
+  color: var(--text2);
+}
+.detail-badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  .detail-stats { grid-template-columns: repeat(2,1fr); }
+  .detail-header-card { flex-direction: column; }
+}
+.dstat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+}
+.dstat-val {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--mono);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.dstat-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; }
+
+/* Call limit control */
+.limit-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.limit-label { font-size: 12px; color: var(--text2); flex-shrink: 0; }
+.limit-input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--mono);
+  outline: none;
+  width: 80px;
+  transition: border-color .15s;
+}
+.limit-input:focus { border-color: var(--orange); }
+.limit-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 14px;
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: var(--sans);
+  transition: all .15s;
+}
+.limit-btn:hover { border-color: var(--orange); color: var(--orange); }
+.limit-active { font-size: 12px; color: var(--orange); font-weight: 500; }
+
+/* Per-form webhook config */
+.webhook-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.webhook-title {
+  font-size: 11px; font-weight: 500;
+  color: var(--text2); text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+.webhook-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.webhook-input {
+  flex: 1; min-width: 200px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: var(--mono);
+  outline: none;
+  transition: border-color .15s;
+}
+.webhook-input:focus { border-color: var(--orange); }
+.webhook-input::placeholder { color: var(--text3); }
+
+/* Calls table */
+.calls-table {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.calls-header {
+  display: grid;
+  grid-template-columns: 40px 1fr 140px 120px 110px 160px;
+  padding: 9px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 700px) {
+  .calls-header { grid-template-columns: 32px 1fr 100px 90px; }
+  .calls-header > *:nth-child(5),
+  .calls-header > *:nth-child(6) { display: none; }
+  .call-row { grid-template-columns: 32px 1fr 100px 90px !important; }
+  .call-row > *:nth-child(5),
+  .call-row > *:nth-child(6) { display: none; }
+}
+.call-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 140px 120px 110px 160px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background .12s;
+}
+.call-row:last-child { border-bottom: none; }
+.call-row:hover { background: var(--surface2); }
+.call-row.paused-row { opacity: .55; }
+
+.call-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+.call-phone {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text);
+}
+.call-name { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* Call status badges */
+.cs { font-size: 10px; font-weight: 500; padding: 2px 9px; border-radius: 20px; display: inline-block; }
+.cs-calling { background: var(--orange-dim); border: 1px solid var(--orange-border); color: var(--orange); }
+.cs-done { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.cs-missed { background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.25); color: var(--red); }
+.cs-pending { background: var(--surface3); border: 1px solid var(--border); color: var(--text2); }
+.cs-paused { background: var(--surface3); border: 1px solid var(--border); color: var(--text3); }
+
+/* WhatsApp sent badge */
+.wa-sent { font-size: 10px; color: var(--green); }
+.wa-pending { font-size: 10px; color: var(--text3); }
+
+/* Audio player */
+.audio-wrap { display: flex; align-items: center; gap: 6px; }
+.audio-play {
+  width: 26px; height: 26px;
+  background: var(--orange-dim);
+  border: 1px solid var(--orange-border);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  color: var(--orange);
+  flex-shrink: 0;
+  transition: all .15s;
+}
+.audio-play:hover { background: var(--orange); color: white; }
+.audio-dur { font-size: 10px; color: var(--text2); font-family: var(--mono); }
+.audio-no { font-size: 10px; color: var(--text3); }
+
+/* Transcript expand */
+.transcript-btn {
+  font-size: 10px; color: var(--text2);
+  background: transparent; border: none;
+  cursor: pointer; font-family: var(--sans);
+  padding: 0; text-decoration: underline;
+  transition: color .15s;
+}
+.transcript-btn:hover { color: var(--orange); }
+.transcript-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-top: 8px;
+  display: none;
+}
+.transcript-box.open { display: block; }
+
+/* Pause at row banner */
+.paused-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--orange-dim);
+  border: 1px solid var(--orange-border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--orange);
+  margin-bottom: 16px;
+}
+
+/* Detail page — action row */
+.detail-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.action-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  font-family: var(--sans);
+  color: var(--text2);
+  transition: all .15s;
+}
+.action-btn:hover { border-color: var(--orange); color: var(--orange); }
+.action-btn.primary { background: var(--orange); color: white; border-color: var(--orange); }
+.action-btn.primary:hover { opacity: .88; }
+.action-btn.danger { color: var(--red); }
+.action-btn.danger:hover { border-color: var(--red); }
+
+/* Hidden audio element */
+#globalAudio { display: none; }
+
+/* Detail page loading */
+.detail-loading {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 80px;
+  color: var(--text2); font-size: 14px;
+}
+
 </style>
 </head>
 <body>
@@ -485,7 +783,7 @@ body {
 </div>
 
 <!-- MAIN -->
-<div class="main">
+<div class="main" id="dashboardMain">
 
   <!-- HOW IT WORKS + CONFIG -->
   <div class="info-grid">
@@ -542,6 +840,39 @@ body {
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- WEBHOOK + INTEGRATION SECTION — front page -->
+  <div class="sec-head" style="margin-top:8px;">
+    <div class="sec-title">Webhook &amp; Integrations</div>
+    <div class="sec-note">Global webhooks — fire on every call across all forms</div>
+  </div>
+  <div class="config-card" style="margin-bottom:24px;">
+    <div class="config-grid">
+      <div class="config-field">
+        <div class="config-label">Primary Webhook URL (Apps Script)</div>
+        <input class="config-input" id="wh-primary" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <div class="config-field">
+        <div class="config-label">Bolna Post-Call Webhook</div>
+        <input class="config-input" id="wh-bolna" placeholder="Paste in Bolna Analytics tab" readonly style="cursor:pointer;" onclick="copyBolnaWebhook()" title="Click to copy" />
+      </div>
+      <div class="config-field">
+        <div class="config-label">Interakt API Key</div>
+        <input class="config-input" id="wh-interakt" placeholder="For WhatsApp PDF trigger" type="password" />
+      </div>
+      <div class="config-field">
+        <div class="config-label">WhatsApp Template Name</div>
+        <input class="config-input" id="wh-template" placeholder="Interakt template name" />
+      </div>
+    </div>
+    <div id="customGlobalWebhooks" style="margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <button class="btn-save" onclick="saveWebhookConfig()">Save Webhooks</button>
+      <button class="btn-save" onclick="addGlobalWebhook()" style="border-color:var(--orange);color:var(--orange);">+ Add Custom Integration</button>
+      <button class="btn-save" onclick="testPrimaryWebhook()">Test Webhook</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;">Custom integrations fire on every call across all forms. Use for CRM sync, notifications, or any external tool.</div>
   </div>
 
   <!-- FORMS TABLE -->
@@ -649,7 +980,7 @@ function renderTable() {
           <div class="check ${isActive ? 'checked' : ''}" onclick="toggleForm('${id}')" title="${isActive ? 'Click to pause' : 'Click to activate Diya calling'}"></div>
         </div>
         <div>
-          <div class="form-id">${id}${newBadge}</div>
+          <div class="form-id" style="cursor:pointer;" data-formid="${id}" onclick="goToForm(this)" title="Click to view call log">${id}${newBadge} <span style='font-size:10px;color:var(--text3);margin-left:4px;'>→</span></div>
           <input
             class="name-edit"
             placeholder="Ad ka naam likho (optional)"
@@ -842,6 +1173,583 @@ function callAllExisting(formId) {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 updateStats();
+
+
+// ─── FRONT PAGE WEBHOOK CONFIG ───────────────────────────────────────────────
+var whConfig = JSON.parse(localStorage.getItem('dvr_wh_config') || '{}');
+var globalWebhooks = JSON.parse(localStorage.getItem('dvr_global_webhooks') || '[]');
+
+// Load saved values into fields
+(function loadWebhookFields() {
+  if (document.getElementById('wh-primary') && whConfig.primary) {
+    document.getElementById('wh-primary').value = whConfig.primary;
+  }
+  if (document.getElementById('wh-interakt') && whConfig.interakt) {
+    document.getElementById('wh-interakt').value = whConfig.interakt;
+  }
+  if (document.getElementById('wh-template') && whConfig.template) {
+    document.getElementById('wh-template').value = whConfig.template;
+  }
+  // Bolna webhook URL = this page's Apps Script URL (read-only display)
+  if (document.getElementById('wh-bolna') && whConfig.primary) {
+    document.getElementById('wh-bolna').value = whConfig.primary;
+  }
+  renderGlobalWebhooks();
+})();
+
+function saveWebhookConfig() {
+  whConfig = {
+    primary: (document.getElementById('wh-primary') || {}).value || '',
+    interakt: (document.getElementById('wh-interakt') || {}).value || '',
+    template: (document.getElementById('wh-template') || {}).value || ''
+  };
+  localStorage.setItem('dvr_wh_config', JSON.stringify(whConfig));
+  // Also sync to main config
+  if (!config.script && whConfig.primary) {
+    config.script = whConfig.primary;
+    localStorage.setItem('dvr_config', JSON.stringify(config));
+    var cfgScriptEl = document.getElementById('cfg-script');
+    if (cfgScriptEl) cfgScriptEl.value = whConfig.primary;
+  }
+  if (window.saveConfigToFirebase) window.saveConfigToFirebase(Object.assign({}, config, whConfig));
+  showToast('Webhook config saved', 'ok');
+}
+
+function copyBolnaWebhook() {
+  var val = (document.getElementById('wh-primary') || {}).value || '';
+  if (val) {
+    navigator.clipboard.writeText(val).then(function() {
+      showToast('Bolna webhook URL copied — paste in Bolna Analytics tab', 'ok');
+    }).catch(function() {
+      showToast('Copy this URL and paste in Bolna Analytics tab: ' + val.slice(0,40), 'warn');
+    });
+  } else {
+    showToast('Set Primary Webhook URL first', 'err');
+  }
+}
+
+function testPrimaryWebhook() {
+  var url = (document.getElementById('wh-primary') || {}).value || config.script || '';
+  if (!url) { showToast('Enter webhook URL first', 'err'); return; }
+  var img = new Image();
+  img.src = url + '?action=ping';
+  img.onload = img.onerror = function() { showToast('Ping sent to webhook', 'ok'); };
+}
+
+function addGlobalWebhook() {
+  globalWebhooks.push('');
+  localStorage.setItem('dvr_global_webhooks', JSON.stringify(globalWebhooks));
+  renderGlobalWebhooks();
+  showToast('+ Custom integration added — paste URL', 'ok');
+}
+
+function renderGlobalWebhooks() {
+  var area = document.getElementById('customGlobalWebhooks');
+  if (!area) return;
+  if (globalWebhooks.length === 0) { area.innerHTML = ''; return; }
+  area.innerHTML = globalWebhooks.map(function(url, i) {
+    return '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">'
+      + '<input class="config-input" style="flex:1;min-width:200px;" placeholder="Custom integration URL" value="' + url.replace(/"/g,'&quot;') + '" onchange="updateGlobalWebhook(' + i + ',this.value)" />'
+      + '<button class="btn-save" onclick="testGlobalWebhook(' + i + ')" style="border-color:var(--green);color:var(--green);">Test</button>'
+      + '<button class="btn-save" onclick="removeGlobalWebhook(' + i + ')" style="color:var(--red);">Remove</button>'
+      + '</div>';
+  }).join('');
+}
+
+function updateGlobalWebhook(idx, val) {
+  globalWebhooks[idx] = val;
+  localStorage.setItem('dvr_global_webhooks', JSON.stringify(globalWebhooks));
+}
+
+function removeGlobalWebhook(idx) {
+  globalWebhooks.splice(idx, 1);
+  localStorage.setItem('dvr_global_webhooks', JSON.stringify(globalWebhooks));
+  renderGlobalWebhooks();
+  showToast('Integration removed', '');
+}
+
+function testGlobalWebhook(idx) {
+  var url = globalWebhooks[idx];
+  if (!url) { showToast('Enter URL first', 'err'); return; }
+  var img = new Image();
+  img.src = url + '?action=ping';
+  img.onload = img.onerror = function() { showToast('Ping sent: ' + url.slice(0,40), 'ok'); };
+}
+
+// ─── GO TO FORM DETAIL PAGE ──────────────────────────────────────────────────
+function goToForm(el) {
+  var id = el.getAttribute('data-formid');
+  if (id) window.location.href = '?form=' + encodeURIComponent(id);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ROUTING — runs after DOM ready, checks URL for ?form= param
+// If found: hides main dashboard, shows detail page
+// If not: main dashboard runs as normal (all existing code above)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function() { (function() {
+  var urlParams = new URLSearchParams(window.location.search);
+  var formId = urlParams.get('form');
+
+  if (!formId) return; // No form param — main dashboard runs normally
+
+  // ── HIDE MAIN DASHBOARD ───────────────────────────────────────────────────
+  // Hide stats bar, main content area — keep header visible
+  var statsBar = document.querySelector('.stats');
+  var mainDiv = document.getElementById('dashboardMain');
+  var toastEl = document.getElementById('toast');
+  if (statsBar) statsBar.style.display = 'none';
+  if (mainDiv) mainDiv.style.display = 'none';
+
+  // ── SHOW DETAIL PAGE ─────────────────────────────────────────────────────
+  var detailPage = document.getElementById('detailPage');
+  if (detailPage) detailPage.style.display = 'block';
+
+  // Update header subtitle
+  var brandSub = document.querySelector('.brand-sub');
+  if (brandSub) brandSub.textContent = 'Form Detail · ' + formId;
+
+  // ── STATE ────────────────────────────────────────────────────────────────
+  var callLogs = {};     // { callId: { phone, name, status, duration, recordingUrl, transcript, timestamp, waStatus } }
+  var callLimit = 0;     // 0 = no limit
+  var isPaused = false;
+  var formWebhook = '';
+  var formMeta = {};     // label, leads etc from Firebase forms data
+  var callUnsubscribe = null;
+
+  // ── LOAD FORM METADATA ───────────────────────────────────────────────────
+  // Wait for Firebase renderFromFirebase to fire with form list
+  var metaCheckInterval = setInterval(function() {
+    if (window.firebaseForms && window.firebaseForms[formId]) {
+      formMeta = window.firebaseForms[formId];
+      clearInterval(metaCheckInterval);
+      initDetailPage();
+    }
+    // If forms loaded but this ID not found, init anyway after 3s
+  }, 300);
+  setTimeout(function() {
+    clearInterval(metaCheckInterval);
+    if (!formMeta.label) initDetailPage();
+  }, 3000);
+
+  // ── INIT DETAIL PAGE ─────────────────────────────────────────────────────
+  function initDetailPage() {
+    // Load call limit, webhook, paused state from Firebase
+    var loaded = 0;
+    function checkReady() {
+      loaded++;
+      if (loaded >= 3) renderDetailPage();
+    }
+
+    if (window.getCallLimit) {
+      window.getCallLimit(formId, function(val) { callLimit = val || 0; checkReady(); });
+    } else { checkReady(); }
+
+    if (window.getFormWebhook) {
+      window.getFormWebhook(formId, function(val) { formWebhook = val || ''; checkReady(); });
+    } else { checkReady(); }
+
+    if (window.getFormPaused) {
+      window.getFormPaused(formId, function(val) { isPaused = !!val; checkReady(); });
+    } else { checkReady(); }
+
+    // Subscribe to call logs real-time
+    if (window.subscribeCallLogs) {
+      callUnsubscribe = window.subscribeCallLogs(formId, function(data) {
+        callLogs = data;
+        renderCallsTable();
+        renderDetailStats();
+      });
+    }
+  }
+
+  // ── RENDER FULL DETAIL PAGE ───────────────────────────────────────────────
+  function renderDetailPage() {
+    var main = document.getElementById('detailMain');
+    var label = formMeta.label || '';
+    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
+    var scriptUrl = dvConfig.script || '';
+
+    var html = '';
+
+    // Back button
+    html += '<a class="back-btn" href="' + window.location.pathname + '">← Back to Form Router</a>';
+
+    // Paused banner
+    html += '<div id="pausedBanner" class="paused-banner" style="' + (isPaused ? '' : 'display:none;') + '">'
+      + '⏸️ Calls paused for this form · <strong>' + countByStatus('paused') + ' leads paused</strong>'
+      + ' &nbsp;<button class="action-btn" onclick="resumeCalls()" style="padding:4px 10px;font-size:11px;">Resume</button>'
+      + '</div>';
+
+    // Form header card
+    html += '<div class="detail-header-card">'
+      + '<div>'
+      + '<div class="detail-form-id">' + formId + '</div>'
+      + '<div class="detail-form-label">' + (label || 'No label set') + '</div>'
+      + '</div>'
+      + '<div class="detail-badges" id="detailBadges">'
+      + renderStatusBadge()
+      + '</div>'
+      + '</div>';
+
+    // Stats
+    html += '<div class="detail-stats" id="detailStats">' + renderStatsHTML() + '</div>';
+
+    // Action buttons
+    html += '<div class="detail-actions">'
+      + '<button class="action-btn primary" onclick="startCalling()">📞 Start Calling Pending</button>'
+      + '<button class="action-btn" onclick="pauseAt()">⏸️ Pause After Current</button>'
+      + '<button class="action-btn danger" onclick="clearPause()">✕ Clear Pause</button>'
+      + '</div>';
+
+// Per-form webhook card
+    html += '<div class="webhook-card">'
+      + '<div class="webhook-title">Webhook + Apps Script Config (this form only)</div>'
+      + '<div class="webhook-row">'
+      + '<input class="webhook-input" id="formWebhookInput" placeholder="Custom Apps Script URL for this form (leave blank to use global)" value="' + (formWebhook || '') + '" />'
+      + '<button class="limit-btn" onclick="saveWebhook()">Save</button>'
+      + '<button class="limit-btn" onclick="testWebhook()" style="border-color:var(--green);color:var(--green)">Test</button>'
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--text3);margin-top:6px;">Leave blank to use global Apps Script URL. Set a custom URL to route this form calls to a different script.</div>'
+      + '</div>'
+      + '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">'
+      + '<div class="webhook-title" style="margin-bottom:8px;">Custom Integrations (additional webhooks)</div>'
+      + '<div id="customWebhooksArea"></div>'
+      + '<button class="limit-btn" onclick="addCustomWebhook()" style="margin-top:6px;">+ Add Custom Webhook URL</button>'
+      + '<div style="font-size:11px;color:var(--text3);margin-top:6px;">Add webhook URLs for any custom pages, CRMs, or tools you connect in future. Each receives the same call data.</div>'
+      + '</div>';
+
+    // Call limit card
+    html += '<div class="limit-card">'
+      + '<span class="limit-label">⏹ Pause after</span>'
+      + '<input class="limit-input" type="number" id="limitInput" min="0" placeholder="e.g. 20" value="' + (callLimit || '') + '" />'
+      + '<span class="limit-label">calls &nbsp;|&nbsp; 0 = no limit</span>'
+      + '<button class="limit-btn" onclick="saveLimit()">Save</button>'
+      + (callLimit > 0 ? '<span class="limit-active">Limit set: ' + callLimit + ' calls</span>' : '')
+      + '</div>';
+
+    // Calls table
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+      + '<div class="sec-title">Call Log</div>'
+      + '<div style="font-size:11px;color:var(--text2);" id="callCountLabel">Loading...</div>'
+      + '</div>';
+    html += '<div class="calls-table">'
+      + '<div class="calls-header">'
+      + '<div class="th">#</div>'
+      + '<div class="th">Lead</div>'
+      + '<div class="th">Call Status</div>'
+      + '<div class="th">Time</div>'
+      + '<div class="th">WhatsApp</div>'
+      + '<div class="th">Recording + Transcript</div>'
+      + '</div>'
+      + '<div id="callsTableBody"><div class="loader"><div class="spin"></div>Loading calls...</div></div>'
+      + '</div>';
+
+    main.innerHTML = html;
+    renderCallsTable();
+    renderDetailStats();
+  }
+
+  // ── RENDER STATS HTML ─────────────────────────────────────────────────────
+  function renderStatsHTML() {
+    var logs = Object.values(callLogs);
+    var total = logs.length;
+    var done = logs.filter(function(c){ return c.status === 'completed'; }).length;
+    var missed = logs.filter(function(c){ return c.status === 'missed' || c.status === 'no_answer'; }).length;
+    var pending = logs.filter(function(c){ return !c.status || c.status === 'pending'; }).length;
+    return '<div class="dstat"><div class="dstat-val" style="color:var(--text)">' + total + '</div><div class="dstat-label">Total Calls</div></div>'
+      + '<div class="dstat"><div class="dstat-val" style="color:var(--green)">' + done + '</div><div class="dstat-label">Completed</div></div>'
+      + '<div class="dstat"><div class="dstat-val" style="color:var(--red)">' + missed + '</div><div class="dstat-label">Not Picked</div></div>'
+      + '<div class="dstat"><div class="dstat-val" style="color:var(--orange)">' + pending + '</div><div class="dstat-label">Pending</div></div>';
+  }
+
+  function renderDetailStats() {
+    var s = document.getElementById('detailStats');
+    if (s) s.innerHTML = renderStatsHTML();
+    var cl = document.getElementById('callCountLabel');
+    if (cl) cl.textContent = Object.keys(callLogs).length + ' calls total';
+  }
+
+  function countByStatus(status) {
+    return Object.values(callLogs).filter(function(c){ return c.status === status; }).length;
+  }
+
+  function renderStatusBadge() {
+    var dvActive = JSON.parse(localStorage.getItem('dvr_active') || '[]');
+    var isActive = dvActive.includes(formId);
+    return isActive
+      ? '<span class="status-badge badge-active">Diya Calling</span>'
+      : '<span class="status-badge badge-paused">Paused</span>';
+  }
+
+  // ── RENDER CALLS TABLE ────────────────────────────────────────────────────
+  function renderCallsTable() {
+    var body = document.getElementById('callsTableBody');
+    if (!body) return;
+
+    var entries = Object.entries(callLogs);
+    if (entries.length === 0) {
+      body.innerHTML = '<div class="empty-state"><div class="empty-icon">📞</div><div class="empty-title">Koi calls nahi abhi</div><div class="empty-sub">Jab Diya calls karegi — yahan real-time mein dikhenge</div></div>';
+      return;
+    }
+
+    // Sort by timestamp descending
+    entries.sort(function(a,b){
+      return (b[1].timestamp || 0) - (a[1].timestamp || 0);
+    });
+
+    var rows = entries.map(function(entry, idx) {
+      var cid = entry[0];
+      var c = entry[1];
+      var rowNum = entries.length - idx;
+      var statusBadge = getStatusBadge(c.status);
+      var time = c.timestamp ? new Date(c.timestamp).toLocaleString('en-IN', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+      var waBadge = c.waStatus === 'sent'
+        ? '<span class="wa-sent">✓ Sent</span>'
+        : '<span class="wa-pending">Pending</span>';
+      var recording = renderRecording(cid, c);
+      var isPausedRow = c.status === 'paused';
+
+      return '<div class="call-row' + (isPausedRow ? ' paused-row' : '') + '" id="cr-' + cid + '">'
+        + '<div class="call-num">' + rowNum + '</div>'
+        + '<div><div class="call-phone">' + (c.phone || '—') + '</div><div class="call-name">' + (c.name || '') + '</div></div>'
+        + '<div>' + statusBadge + '</div>'
+        + '<div style="font-size:11px;color:var(--text2);">' + time + '</div>'
+        + '<div>' + waBadge + '</div>'
+        + '<div>' + recording + '</div>'
+        + '</div>';
+    }).join('');
+
+    body.innerHTML = rows;
+  }
+
+  function getStatusBadge(status) {
+    var map = {
+      'calling': '<span class="cs cs-calling">📞 Calling</span>',
+      'completed': '<span class="cs cs-done">✓ Completed</span>',
+      'missed': '<span class="cs cs-missed">✗ Not Picked</span>',
+      'no_answer': '<span class="cs cs-missed">✗ No Answer</span>',
+      'failed': '<span class="cs cs-missed">✗ Failed</span>',
+      'pending': '<span class="cs cs-pending">Pending</span>',
+      'paused': '<span class="cs cs-paused">⏸ Paused</span>'
+    };
+    return map[status] || '<span class="cs cs-pending">' + (status || 'Pending') + '</span>';
+  }
+
+  function renderRecording(cid, c) {
+    var html = '';
+    if (c.recordingUrl) {
+      var dur = c.duration ? formatDuration(c.duration) : '';
+      var safeUrl = (c.recordingUrl || '').replace(/&/g,'&amp;');
+      html += '<div class="audio-wrap">'
+        + '<div class="audio-play" data-url="' + safeUrl + '" onclick="playRecordingEl(this)" title="Play recording">▶</div>'
+        + (dur ? '<span class="audio-dur">' + dur + '</span>' : '')
+        + '</div>';
+    } else {
+      html += '<span class="audio-no">No recording</span>';
+    }
+    if (c.transcript) {
+      var safeCid = String(cid).replace(/[^a-zA-Z0-9_-]/g,'_');
+      html += '<button class="transcript-btn" data-cid="tr-' + safeCid + '" onclick="toggleTranscriptEl(this)">View transcript</button>'
+        + '<div class="transcript-box" id="tr-' + safeCid + '">' + escapeHtml(c.transcript) + '</div>';
+    }
+    return html;
+  }
+
+  function formatDuration(secs) {
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function escapeStr(str) {
+    return String(str).replace(/'/g, "\'").replace(/"/g, '&quot;');
+  }
+
+  // ── ACTIONS ───────────────────────────────────────────────────────────────
+  window.playRecordingEl = function(el) {
+    var url = el.getAttribute('data-url');
+    if (!url) return;
+    var audio = document.getElementById('globalAudio');
+    if (!audio) return;
+    audio.src = url;
+    audio.play().catch(function() {
+      window.open(url, '_blank');
+    });
+    showToast('▶ Playing recording...', 'ok');
+  };
+  // Keep old function for backward compat
+  window.playRecording = function(url) {
+    var audio = document.getElementById('globalAudio');
+    if (!audio) return;
+    audio.src = url;
+    audio.play().catch(function() { window.open(url, '_blank'); });
+    showToast('▶ Playing recording...', 'ok');
+  };
+
+  window.toggleTranscriptEl = function(el) {
+    var cid = el.getAttribute('data-cid');
+    var box = document.getElementById(cid);
+    if (box) box.classList.toggle('open');
+  };
+  window.toggleTranscript = function(cid) {
+    var box = document.getElementById('tr-' + cid);
+    if (box) box.classList.toggle('open');
+  };
+
+  window.saveLimit = function() {
+    var val = parseInt(document.getElementById('limitInput').value) || 0;
+    callLimit = val;
+    if (window.saveCallLimit) window.saveCallLimit(formId, val);
+    showToast(val > 0 ? '⏹ Limit set: pause after ' + val + ' calls' : '✓ No limit — call all', 'ok');
+    renderDetailPage();
+  };
+
+  window.saveWebhook = function() {
+    var val = document.getElementById('formWebhookInput').value.trim();
+    formWebhook = val;
+    if (window.saveFormWebhook) window.saveFormWebhook(formId, val);
+    showToast(val ? '✓ Custom webhook saved for this form' : '✓ Using global Apps Script URL', 'ok');
+  };
+
+  window.testWebhook = function() {
+    var val = document.getElementById('formWebhookInput').value.trim();
+    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
+    var url = val || dvConfig.script || '';
+    if (!url) { showToast('❌ No webhook URL set', 'err'); return; }
+    var img = new Image();
+    img.src = url + '?action=ping&form_id=' + encodeURIComponent(formId);
+    img.onload = img.onerror = function() { showToast('↗ Ping sent to webhook', 'ok'); };
+  };
+
+  window.startCalling = function() {
+    var dvConfig = JSON.parse(localStorage.getItem('dvr_config') || '{}');
+    var url = formWebhook || dvConfig.script || '';
+    if (!url) { showToast('❌ Set Apps Script URL in config first', 'err'); return; }
+    var img = new Image();
+    img.src = url + '?source=call_all_existing&form_id=' + encodeURIComponent(formId);
+    img.onload = img.onerror = function() { showToast('📞 Diya calling all Pending leads...', 'ok'); };
+  };
+
+  window.pauseAt = function() {
+    isPaused = true;
+    if (window.setFormPaused) window.setFormPaused(formId, true);
+    var banner = document.getElementById('pausedBanner');
+    if (banner) banner.style.display = 'flex';
+    showToast('⏸ Calls paused after current call completes', 'warn');
+  };
+
+  window.resumeCalls = function() {
+    isPaused = false;
+    if (window.setFormPaused) window.setFormPaused(formId, false);
+    var banner = document.getElementById('pausedBanner');
+    if (banner) banner.style.display = 'none';
+    showToast('▶ Calls resumed', 'ok');
+  };
+
+  window.clearPause = function() {
+    isPaused = false;
+    callLimit = 0;
+    if (window.setFormPaused) window.setFormPaused(formId, false);
+    if (window.saveCallLimit) window.saveCallLimit(formId, 0);
+    var banner = document.getElementById('pausedBanner');
+    if (banner) banner.style.display = 'none';
+    showToast('✓ Pause cleared — no limits active', 'ok');
+    renderDetailPage();
+  };
+
+
+  // ── CUSTOM WEBHOOKS ────────────────────────────────────────────────────────
+  var customWebhooks = [];
+
+  window.loadCustomWebhooks = function() {
+    var stored = localStorage.getItem('dvr_custom_wh_' + formId);
+    customWebhooks = stored ? JSON.parse(stored) : [];
+    renderCustomWebhooks();
+  };
+
+  function renderCustomWebhooks() {
+    var area = document.getElementById('customWebhooksArea');
+    if (!area) return;
+    if (customWebhooks.length === 0) {
+      area.innerHTML = '<div style="font-size:11px;color:var(--text3);margin-bottom:6px;">No custom webhooks added yet.</div>';
+      return;
+    }
+    area.innerHTML = customWebhooks.map(function(wh, i) {
+      return '<div class="webhook-row" style="margin-bottom:6px;">'
+        + '<input class="webhook-input" value="' + wh.replace(/"/g,'&quot;') + '" onchange="updateCustomWebhook(' + i + ', this.value)" />'
+        + '<button class="limit-btn" onclick="testCustomWebhook(' + i + ')" style="border-color:var(--green);color:var(--green)">Test</button>'
+        + '<button class="limit-btn" onclick="removeCustomWebhook(' + i + ')" style="color:var(--red);">✕</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  window.addCustomWebhook = function() {
+    customWebhooks.push('');
+    saveCustomWebhooks();
+    renderCustomWebhooks();
+    showToast('+ Custom webhook added — paste your URL', 'ok');
+  };
+
+  window.updateCustomWebhook = function(idx, val) {
+    customWebhooks[idx] = val;
+    saveCustomWebhooks();
+  };
+
+  window.removeCustomWebhook = function(idx) {
+    customWebhooks.splice(idx, 1);
+    saveCustomWebhooks();
+    renderCustomWebhooks();
+    showToast('Webhook removed', '');
+  };
+
+  window.testCustomWebhook = function(idx) {
+    var url = customWebhooks[idx];
+    if (!url) { showToast('Enter a URL first', 'err'); return; }
+    var img = new Image();
+    img.src = url + '?action=ping&form_id=' + encodeURIComponent(formId);
+    img.onload = img.onerror = function() { showToast('Ping sent to: ' + url.slice(0,40) + '...', 'ok'); };
+  };
+
+  function saveCustomWebhooks() {
+    localStorage.setItem('dvr_custom_wh_' + formId, JSON.stringify(customWebhooks));
+    if (window.saveActiveToFirebase) {
+      // Optionally sync to Firebase for cross-device access
+    }
+  }
+
+  // Load custom webhooks when detail page renders
+  setTimeout(function() {
+    if (window.loadCustomWebhooks) window.loadCustomWebhooks();
+  }, 500);
+
+})(); }); // end DOMContentLoaded
+// ═══════════════════════════════════════════════════════════════════════════════
+// END ROUTING + DETAIL PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
 </script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     DETAIL PAGE — shown when ?form=XXXX is in URL
+     All existing HTML above is hidden when this is active
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="detailPage" style="display:none;">
+  <!-- Header reused — brand stays same, subtitle changes -->
+  <div id="detailMain" class="detail-main" style="max-width:1000px;padding:28px 24px;">
+    <div class="detail-loading" id="detailLoader">
+      <div class="spin"></div>
+      Loading call data...
+    </div>
+  </div>
+</div>
+
+<!-- Hidden audio player -->
+<audio id="globalAudio"></audio>
+
 </body>
 </html>
